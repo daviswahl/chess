@@ -1,45 +1,15 @@
-sealed trait Column extends Ordered[Column] {
-  def value: Int
-  def compare(that: Column): Int = this.value compare that.value
-}
-case object A extends Column { def value = 1 }
-case object B extends Column { def value = 2 }
-case object C extends Column { def value = 3 }
-case object D extends Column { def value = 4 }
-case object E extends Column { def value = 5 }
-case object F extends Column { def value = 6 }
-case object G extends Column { def value = 7 }
-case object H extends Column { def value = 8 }
-
-sealed trait Row extends Ordered[Row] {
-  def value: Int
-  def compare(that: Row): Int = this.value compare that.value
-}
-case object Eight extends Row { def value = 8 }
-case object Seven extends Row { def value = 7 }
-case object Six   extends Row { def value = 6 }
-case object Five  extends Row { def value = 5 }
-case object Four  extends Row { def value = 4 }
-case object Three extends Row { def value = 3 }
-case object Two   extends Row { def value = 2 }
-case object One   extends Row { def value = 1 }
-
 case class Position(val row: Row, val col: Column) {
   override def toString = (row, col).toString
 }
 
 sealed trait Direction
 case object Up extends Direction
-case object UpRight extends Direction
-case object Right extends Direction
-case object DownRight extends Direction
+case object R extends Direction
 case object Down extends Direction
-case object DownLeft extends Direction
-case object Left extends Direction
-case object UpLeft extends Direction
+case object L extends Direction
 
 sealed trait Projection[Direction]
-case class Diagonal(d: Direction) extends Projection[Direction]
+case class Diagonal(lat: Direction, long: Direction) extends Projection[Direction]
 case class Lateral(d: Direction) extends Projection[Direction]
 case class Longitudinal(d: Direction) extends Projection[Direction]
 
@@ -79,18 +49,19 @@ class Board {
   def row(r: Row): List[Tile] = tiles filter { t =>
     t.pos match {
       case Position(`r`, _) => true
-      case Position(_,_) => false
+      case _ => false
     }
   }
 
   def column(c: Column): List[Tile] = tiles filter { t =>
     t.pos match {
       case Position(_, `c`) => true
-      case Position(_,_) => false
+      case _ => false
     }
   }
 
   def tile(r: Row, c: Column): Tile = {
+    println(r, c)
     val t = tiles filter { t: Tile =>
       t.pos match {
         case Position(`r`, `c`) => true
@@ -101,16 +72,22 @@ class Board {
   }
 
   def project(p: Position, d: Longitudinal): List[Tile] = d match {
-    case Longitudinal(Up) => column(p.col) filter (_.pos.row > p.row)
+    case Longitudinal(Up)   => column(p.col) filter (_.pos.row > p.row)
     case Longitudinal(Down) => column(p.col) filter (_.pos.row < p.row)
-    case Longitudinal(_) => List()
+    case _ => List()
   }
 
-  def project(p: Position, d: Lateral): List[Tile] = {
-    List()
+  def project(p: Position, d: Lateral): List[Tile] = d match {
+    case Lateral(L)  => row(p.row) filter (_.pos.col < p.col)
+    case Lateral(R) => row(p.row) filter (_.pos.col > p.col)
+    case _ => List()
   }
 
-  def project(p: Position, d: Diagonal): List[Tile] = {
-    List()
+  def project(p: Position, d: Diagonal): List[Tile] = d match {
+    case Diagonal(x, y) => {
+      val c = project(p, Lateral(y)) map (_.pos.col)
+      val r = project(p, Longitudinal(x)) map (_.pos.row)
+      r zip c map (t => tile(t._1, t._2))
+    }
   }
 }
