@@ -1,6 +1,6 @@
-sealed trait Column extends Ordered[Row] {
+sealed trait Column extends Ordered[Column] {
   def value: Int
-  def compare(that: Row): Int = this.value compare that.value
+  def compare(that: Column): Int = this.value compare that.value
 }
 case object A extends Column { def value = 1 }
 case object B extends Column { def value = 2 }
@@ -24,12 +24,12 @@ case object Three extends Row { def value = 3 }
 case object Two   extends Row { def value = 2 }
 case object One   extends Row { def value = 1 }
 
-case class Position(r: Row, c: Column) {
+case class Position(val r: Row, val c: Column) {
   override def toString = (r, c).toString
 }
 
 class Tile(val pos: Position, val p: Option[Piece[Color]]) {
-  override def toString = (pos, p getOrElse "").toString
+  override def toString = (pos, p getOrElse "Empty").toString
 }
 
 class Board {
@@ -63,15 +63,19 @@ class Board {
 
   def row(r: Row): List[Tile] = tiles filter { t =>
     t.pos match {
-      case Position(x, _) if x == r => true
+      case Position(`r`, _) => true
       case Position(_,_) => false
     }
   }
 
-  override def toString = {
-    { for {
-      r <- rows
-    } yield row(r) toString
-    } toString
+  def tile(r: Row, c: Column): Tile = {
+    val t = tiles filter { t: Tile =>
+      t.pos match {
+        case Position(`r`, `c`) => true
+        case _ => false
+      }
+    }
+    t.head
   }
+
 }
