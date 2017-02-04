@@ -24,9 +24,24 @@ case object Three extends Row { def value = 3 }
 case object Two   extends Row { def value = 2 }
 case object One   extends Row { def value = 1 }
 
-case class Position(val r: Row, val c: Column) {
-  override def toString = (r, c).toString
+case class Position(val row: Row, val col: Column) {
+  override def toString = (row, col).toString
 }
+
+sealed trait Direction
+case object Up extends Direction
+case object UpRight extends Direction
+case object Right extends Direction
+case object DownRight extends Direction
+case object Down extends Direction
+case object DownLeft extends Direction
+case object Left extends Direction
+case object UpLeft extends Direction
+
+sealed trait Projection[Direction]
+case class Diagonal(d: Direction) extends Projection[Direction]
+case class Lateral(d: Direction) extends Projection[Direction]
+case class Longitudinal(d: Direction) extends Projection[Direction]
 
 class Tile(val pos: Position, val p: Option[Piece[Color]]) {
   override def toString = (pos, p getOrElse "Empty").toString
@@ -68,6 +83,13 @@ class Board {
     }
   }
 
+  def column(c: Column): List[Tile] = tiles filter { t =>
+    t.pos match {
+      case Position(_, `c`) => true
+      case Position(_,_) => false
+    }
+  }
+
   def tile(r: Row, c: Column): Tile = {
     val t = tiles filter { t: Tile =>
       t.pos match {
@@ -78,4 +100,17 @@ class Board {
     t.head
   }
 
+  def project(p: Position, d: Longitudinal): List[Tile] = d match {
+    case Longitudinal(Up) => column(p.col) filter (_.pos.row > p.row)
+    case Longitudinal(Down) => column(p.col) filter (_.pos.row < p.row)
+    case Longitudinal(_) => List()
+  }
+
+  def project(p: Position, d: Lateral): List[Tile] = {
+    List()
+  }
+
+  def project(p: Position, d: Diagonal): List[Tile] = {
+    List()
+  }
 }
