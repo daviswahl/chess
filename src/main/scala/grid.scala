@@ -4,7 +4,9 @@ sealed trait Column extends Ordered[Column] {
   def +(that: Column): Option[Column] = Column.fromValue(that.value + this.value)
 
 }
-case object A extends Column { def value = 1 }
+case object A extends Column {
+  def value = 1
+}
 case object B extends Column { def value = 2 }
 case object C extends Column { def value = 3 }
 case object D extends Column { def value = 4 }

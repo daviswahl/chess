@@ -83,11 +83,9 @@ class Board {
     case _ => List()
   }
 
-  def project(p: Position, d: Diagonal): List[Tile] = d match {
-    case Diagonal(x, y) => {
-      val c = project(p, Lateral(y)) map (_.pos.col)
-      val r = project(p, Longitudinal(x)) map (_.pos.row)
-      r zip c map (t => tile(t._1, t._2))
-    }
+  def project(p: Position, d: Diagonal): List[Tile] = {
+    val c = project(p, Lateral(d.long)) map (_.pos.col)
+    val r = project(p, Longitudinal(d.lat)) map (_.pos.row)
+    r zip c map (t => tile(t._1, t._2))
   }
 }
